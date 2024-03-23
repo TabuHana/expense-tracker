@@ -14,7 +14,7 @@ export const Navbar = () => {
     }
 
     return (
-        <nav className='flex items-center justify-between h-6'>
+        <nav className='flex items-center justify-between h-6 mt-4'>
             <ThemeToggle />
             <div className='flex gap-4 items-center justify-center'>
                 <Button>Analytics</Button>

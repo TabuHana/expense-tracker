@@ -9,7 +9,7 @@ export const Navbar = () => {
     const { userId } = auth();
 
     return (
-        <nav className='flex items-center justify-between h-6'>
+        <nav className='flex items-center justify-between h-6 mt-4'>
             <ThemeToggle />
             {!userId && (
                 <div className='flex gap-4'>

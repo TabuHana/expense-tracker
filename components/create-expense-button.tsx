@@ -4,37 +4,31 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { PlusIcon, UpdateIcon } from '@radix-ui/react-icons';
+import { format } from 'date-fns';
 
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
+import { Drawer, DrawerClose, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useHasMounted } from '@/hooks/use-has-mounted';
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
 
 const expenseSchema = z.object({
     icon: z.string(),
     type: z.enum(['EXPENSE', 'INCOME']),
-    amount: z.string(),
+    amount: z.coerce.number().min(1, "Min amount is 1"),
 });
 
 type expenseSchemaType = z.infer<typeof expenseSchema>;
 
 export const CreateExpenseButton = () => {
+    const todaysDate = format(new Date(), 'E MMMM dd yyyy');
+
     const form = useForm<expenseSchemaType>({
         resolver: zodResolver(expenseSchema),
         defaultValues: {
             icon: '',
             type: 'EXPENSE',
-            amount: '',
+            amount: 0,
         },
     });
 
@@ -43,30 +37,61 @@ export const CreateExpenseButton = () => {
     };
 
     return (
-        <Dialog>
-            <DialogTrigger asChild>
+        <Drawer>
+            <DrawerTrigger asChild>
                 <Button variant='outline'>
                     <PlusIcon className='h-6 w-6' /> Add new Expense
                 </Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogHeader className='flex flex-col items-center'>
-                    <DialogTitle>Add a new expense</DialogTitle>
-                    <DialogDescription>
-                        Add a new expense or income to track your spending and earnings.
-                    </DialogDescription>
-                </DialogHeader>
+            </DrawerTrigger>
+            <DrawerContent className='p-6 h-full flex flex-col items-center justify-center'>
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)}>
+                    <form
+                        onSubmit={form.handleSubmit(onSubmit)}
+                        className='space-y-5'
+                    >
+                        <div className='w-full mx-auto text-center text-sm text-muted-foreground'>
+                            Today at {todaysDate}
+                        </div>
+                        <FormField
+                            control={form.control}
+                            name='type'
+                            render={({ field }) => (
+                                <FormItem className='max-w-lg mx-auto'>
+                                    <FormControl>
+                                        <Tabs defaultValue='EXPENSE'>
+                                            <TabsList className='grid w-full grid-cols-2'>
+                                                <TabsTrigger
+                                                    {...field}
+                                                    value='EXPENSE'
+                                                >
+                                                    Expense
+                                                </TabsTrigger>
+                                                <TabsTrigger
+                                                    {...field}
+                                                    value='INCOME'
+                                                >
+                                                    Income
+                                                </TabsTrigger>
+                                            </TabsList>
+                                        </Tabs>
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
                         <FormField
                             control={form.control}
                             name='amount'
                             render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Amount</FormLabel>
+                                <FormItem className='max-w-xl mx-auto'>
                                     <FormControl>
-                                        <Input {...field} />
+                                        <Input
+                                            placeholder='0'
+                                            type='text'
+                                            className='text-5xl'
+                                            {...field}
+                                        />
                                     </FormControl>
+                                    <FormMessage />
                                 </FormItem>
                             )}
                         />
@@ -82,36 +107,29 @@ export const CreateExpenseButton = () => {
                                 </FormItem>
                             )}
                         />
-                        <FormField
-                            control={form.control}
-                            name='type'
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Icon</FormLabel>
-                                    <FormControl>
-                                        <Tabs defaultValue='EXPENSE'>
-                                            <TabsList className='grid w-full grid-cols-2'>
-                                                <TabsTrigger value='EXPENSE'>Expense</TabsTrigger>
-                                                <TabsTrigger value='INCOME'>income</TabsTrigger>
-                                            </TabsList>
-                                        </Tabs>
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
+                        <div className='w-full flex items-center justify-center gap-4'>
+                            <DrawerClose asChild>
+                                <Button
+                                    className='flex-1'
+                                    size='lg'
+                                    variant='outline'
+                                >
+                                    Cancel
+                                </Button>
+                            </DrawerClose>
+                            <Button
+                                className='flex-1'
+                                size='lg'
+                                onClick={form.handleSubmit(onSubmit)}
+                                disabled={form.formState.isSubmitting}
+                            >
+                                {!form.formState.isSubmitting && <span>Save</span>}
+                                {form.formState.isSubmitting && <UpdateIcon className='animate-spin' />}
+                            </Button>
+                        </div>
                     </form>
                 </Form>
-                <DialogFooter>
-                    <Button
-                        onClick={form.handleSubmit(onSubmit)}
-                        disabled={form.formState.isSubmitting}
-                        className='w-full mt-4'
-                    >
-                        {!form.formState.isSubmitting && <span>Save</span>}
-                        {form.formState.isSubmitting && <UpdateIcon className='animate-spin' />}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+            </DrawerContent>
+        </Drawer>
     );
 };
